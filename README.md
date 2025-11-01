@@ -63,7 +63,7 @@ packages/
 
 - Node.js (LTS recommended, e.g. >= 16)
 - npm or yarn
-- A POSIX-like shell is used in examples (you mentioned `bash.exe` on Windows).
+- A POSIX-like shell is used in examples (`bash.exe` on Windows).
 
 If you use a global tool like `lerna` or a workspace manager, adjust instructions accordingly.
 
