@@ -1,0 +1,59 @@
+name: Deploy container to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'packages/container/**'
+      - '.github/workflows/deploy-container.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies (container)
+        working-directory: packages/container
+        run: npm ci
+
+      - name: Build container (inject PRODUCTION_DOMAIN)
+        working-directory: packages/container
+        env:
+          # Set this secret to the base URL that the container expects for remotes.
+          # Example: if container's webpack config builds remotes as `${domain}/marketing/remoteEntry.js`,
+          # set PRODUCTION_DOMAIN to the base URL where the marketing site will be served (without trailing slash),
+          # e.g. https://marketing.pages.dev
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
+        run: npm run build
+
+      - name: Install Wrangler
+        run: npm install -g @cloudflare/wrangler@3
+
+      - name: Publish container to Cloudflare Pages
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          PUBLISH_DIR="packages/container/dist"
+          if [ ! -d "$PUBLISH_DIR" ]; then
+            echo "Publish directory $PUBLISH_DIR not found. Trying 'packages/container/build'..."
+            PUBLISH_DIR="packages/container/build"
+          fi
+          if [ ! -d "$PUBLISH_DIR" ]; then
+            echo "Error: no build output found. Ensure the container package's build script writes to 'dist' or 'build'."
+            exit 1
+          fi
+
+          # Provide the Pages project name as a secret: CF_PAGES_PROJECT_CONTAINER
+          wrangler pages publish "$PUBLISH_DIR" --project-name "${{ secrets.CF_PAGES_PROJECT_CONTAINER }}"
+
+      - name: Print deployed info
+        run: echo "Container built and published. Ensure PRODUCTION_DOMAIN was set to the correct marketing URL used by your container's webpack config."
