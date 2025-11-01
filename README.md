@@ -114,3 +114,86 @@ Look for test scripts in each package's `package.json`. Typical patterns use Jes
 cd packages/marketing
 npm test
 ```
+
+## Deployment to Cloudflare Pages
+
+This project is configured for deployment to Cloudflare Pages using GitHub Actions. Each micro-frontend package can be deployed as a separate Cloudflare Pages project, with the container app configured to load remotes from their respective URLs.
+
+### Prerequisites
+
+1. **Cloudflare Account Setup**
+   - Create a Cloudflare account if you don't have one
+   - Create Pages projects for your packages (e.g., `marketing-mfe`, `container-mfe`)
+   - Generate an API token with Pages permissions (Account → API Tokens → Create token)
+
+2. **GitHub Repository Secrets**
+   Required secrets for GitHub Actions:
+   - `CF_API_TOKEN`: Your Cloudflare API token
+   - `CF_ACCOUNT_ID`: Your Cloudflare account ID
+   - `CF_PAGES_PROJECT_MARKETING`: Pages project name for marketing
+   - `CF_PAGES_PROJECT_CONTAINER`: Pages project name for container
+   - `PRODUCTION_DOMAIN`: Domain where marketing remoteEntry.js will be served (for container builds)
+
+### Automated Deployments
+
+The repository includes GitHub Actions workflows that automatically deploy:
+- Marketing package (`packages/marketing`)
+- Container package (`packages/container`)
+
+Workflows trigger on pushes to `main` branch when their respective package files change.
+
+To deploy manually:
+
+```bash
+# Install Wrangler CLI (if needed)
+npm install -g wrangler
+
+# Deploy marketing package
+cd packages/marketing
+npm run build
+wrangler pages publish dist --project-name your-marketing-project
+
+# Deploy container package
+cd ../container
+npm run build
+wrangler pages publish dist --project-name your-container-project
+```
+
+### Module Federation Configuration
+
+The container app is configured to load the marketing remote from a URL specified by `PRODUCTION_DOMAIN` environment variable during build. Example URLs:
+
+- Marketing remote: `https://marketing-mfe.pages.dev/remoteEntry.js`
+- Container app: `https://container-mfe.pages.dev`
+
+To update remote URLs:
+1. Set `PRODUCTION_DOMAIN` in GitHub repository secrets
+2. The container's webpack config will use this to construct remote URLs during build
+
+### Monitoring Deployments
+
+1. GitHub Actions tab shows deployment status and logs
+2. Cloudflare Pages dashboard shows:
+   - Build/deployment history
+   - Preview deployments (for PRs)
+   - Custom domain setup
+   - Analytics and logs
+
+### Troubleshooting
+
+Common deployment issues and solutions:
+
+1. **Build failures**
+   - Check GitHub Actions logs for build errors
+   - Verify `dist` or `build` directory exists after build
+   - Ensure all dependencies are installed (`npm ci`)
+
+2. **Remote loading failures**
+   - Verify `PRODUCTION_DOMAIN` matches your Cloudflare Pages URL
+   - Check browser console for CORS or loading errors
+   - Ensure remoteEntry.js is accessible at the expected URL
+
+3. **Pages project issues**
+   - Confirm project names match repository secrets
+   - Check Cloudflare Pages build logs
+   - Verify API token has correct permissions
