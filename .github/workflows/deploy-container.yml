@@ -54,7 +54,7 @@ jobs:
           fi
 
           # Provide the Pages project name as a secret: CLOUDFLARE_PAGES_PROJECT_CONTAINER
-          wrangler pages deploy "$PUBLISH_DIR" --project-name "${{ secrets.CLOUDFLARE_PAGES_PROJECT_CONTAINER }}" --destination container/latest
+          wrangler pages deploy "$PUBLISH_DIR" --project-name "${{ secrets.CLOUDFLARE_PAGES_PROJECT_CONTAINER }}" --outdir container/latest
 
       - name: Print deployed info
         run: echo "Container built and published. Ensure PRODUCTION_DOMAIN was set to the correct marketing URL used by your container's webpack config."
