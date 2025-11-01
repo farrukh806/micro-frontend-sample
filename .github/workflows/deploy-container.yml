@@ -39,8 +39,8 @@ jobs:
 
       - name: Publish container to Cloudflare Pages
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           PUBLISH_DIR="packages/container/dist"
           if [ ! -d "$PUBLISH_DIR" ]; then
@@ -53,7 +53,7 @@ jobs:
           fi
 
           # Provide the Pages project name as a secret: CF_PAGES_PROJECT_CONTAINER
-          wrangler pages publish "$PUBLISH_DIR" --project-name "${{ secrets.CF_PAGES_PROJECT_CONTAINER }}"
+          wrangler pages deploy "$PUBLISH_DIR" --project-name "${{ secrets.CLOUDFLARE_PAGES_PROJECT_CONTAINER }}"
 
       - name: Print deployed info
         run: echo "Container built and published. Ensure PRODUCTION_DOMAIN was set to the correct marketing URL used by your container's webpack config."
