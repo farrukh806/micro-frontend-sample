@@ -35,7 +35,7 @@ jobs:
         run: npm run build
 
       - name: Install Wrangler
-        run: npm install -g @cloudflare/wrangler@3
+        run: npm install -g wrangler
 
       - name: Publish container to Cloudflare Pages
         env:
