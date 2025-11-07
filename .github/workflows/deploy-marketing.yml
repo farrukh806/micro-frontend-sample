@@ -48,4 +48,4 @@ jobs:
 
           # Provide the Pages project name as a secret: CLOUDFARE_PAGES_PROJECT_MARKETING
           # Replace with your Pages project name or set the secret accordingly.
-          wrangler pages publish "$PUBLISH_DIR" --project-name "${{ secrets.CLOUDFARE_PAGES_PROJECT_MARKETING }}"
+          wrangler pages deploy "$PUBLISH_DIR" --project-name "${{ secrets.CLOUDFARE_PAGES_PROJECT_MARKETING }}"
