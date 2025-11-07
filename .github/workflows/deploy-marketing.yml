@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install dependencies (marketing)
         working-directory: packages/marketing
@@ -36,7 +36,6 @@ jobs:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          # Adjust the path below if your webpack outputs to a different directory (e.g. 'build' instead of 'dist')
           PUBLISH_DIR="packages/marketing/dist"
           if [ ! -d "$PUBLISH_DIR" ]; then
             echo "Publish directory $PUBLISH_DIR not found. Trying 'packages/marketing/build'..."
