@@ -1,0 +1,52 @@
+name: Deploy marketing to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'packages/marketing/**'
+      - '.github/workflows/deploy-marketing.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies (marketing)
+        working-directory: packages/marketing
+        run: npm ci
+
+      - name: Build marketing
+        working-directory: packages/marketing
+        run: npm run build
+
+      - name: Install Wrangler
+        run: npm install -g @cloudflare/wrangler@3
+
+      - name: Publish marketing to Cloudflare Pages
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          # Adjust the path below if your webpack outputs to a different directory (e.g. 'build' instead of 'dist')
+          PUBLISH_DIR="packages/marketing/dist"
+          if [ ! -d "$PUBLISH_DIR" ]; then
+            echo "Publish directory $PUBLISH_DIR not found. Trying 'packages/marketing/build'..."
+            PUBLISH_DIR="packages/marketing/build"
+          fi
+          if [ ! -d "$PUBLISH_DIR" ]; then
+            echo "Error: no build output found. Ensure the marketing package's build script writes to 'dist' or 'build'."
+            exit 1
+          fi
+
+          # Provide the Pages project name as a secret: CF_PAGES_PROJECT_MARKETING
+          # Replace with your Pages project name or set the secret accordingly.
+          wrangler pages publish "$PUBLISH_DIR" --project-name "${{ secrets.CF_PAGES_PROJECT_MARKETING }}"
