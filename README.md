@@ -132,7 +132,7 @@ This project is configured for deployment to Cloudflare Pages using GitHub Actio
    - `CF_ACCOUNT_ID`: Your Cloudflare account ID
    - `CF_PAGES_PROJECT_MARKETING`: Pages project name for marketing
    - `CF_PAGES_PROJECT_CONTAINER`: Pages project name for container
-   - `PRODUCTION_DOMAIN`: Domain where marketing remoteEntry.js will be served (for container builds)
+   - `PRODUCTION_DOMAIN`: Full URL of the marketing app deployment (e.g., `https://marketing-mfe.pages.dev`). Should NOT include paths like `/marketing/` or `/remoteEntry.js` - these are automatically appended by the build process.
 
 ### Automated Deployments
 
@@ -161,14 +161,23 @@ wrangler pages publish dist --project-name your-container-project
 
 ### Module Federation Configuration
 
-The container app is configured to load the marketing remote from a URL specified by `PRODUCTION_DOMAIN` environment variable during build. Example URLs:
+The container app is configured to load the marketing remote from a URL specified by `PRODUCTION_DOMAIN` environment variable during build. 
 
-- Marketing remote: `https://marketing-mfe.pages.dev/remoteEntry.js`
-- Container app: `https://container-mfe.pages.dev`
+**Important:** The `PRODUCTION_DOMAIN` should be set to the full base URL of your marketing app deployment:
+- ✅ Correct: `https://marketing-mfe.pages.dev` or `https://micro-frontend-sample.pages.dev`
+- ❌ Incorrect: `https://marketing-mfe.pages.dev/marketing` or `https://marketing-mfe.pages.dev/remoteEntry.js`
+
+The webpack configuration will automatically append `/remoteEntry.js` to the domain. The marketing app's `remoteEntry.js` file is built at the root of the dist folder, so it will be accessible at `{PRODUCTION_DOMAIN}/remoteEntry.js`.
+
+Example:
+- Marketing app deployed at: `https://marketing-mfe.pages.dev`
+- Set `PRODUCTION_DOMAIN=https://marketing-mfe.pages.dev`
+- Container will load remote from: `https://marketing-mfe.pages.dev/remoteEntry.js`
 
 To update remote URLs:
-1. Set `PRODUCTION_DOMAIN` in GitHub repository secrets
-2. The container's webpack config will use this to construct remote URLs during build
+1. Set `PRODUCTION_DOMAIN` in GitHub repository secrets (or your CI/CD environment)
+2. Rebuild and redeploy the container app
+3. The container's webpack config will use this to construct remote URLs during build
 
 ### Monitoring Deployments
 
@@ -189,9 +198,11 @@ Common deployment issues and solutions:
    - Ensure all dependencies are installed (`npm ci`)
 
 2. **Remote loading failures**
-   - Verify `PRODUCTION_DOMAIN` matches your Cloudflare Pages URL
-   - Check browser console for CORS or loading errors
-   - Ensure remoteEntry.js is accessible at the expected URL
+   - Verify `PRODUCTION_DOMAIN` is set to the full base URL (e.g., `https://marketing-mfe.pages.dev`) without any paths
+   - Ensure `PRODUCTION_DOMAIN` includes the protocol (`https://`)
+   - Check that `remoteEntry.js` is accessible at `{PRODUCTION_DOMAIN}/remoteEntry.js`
+   - Check browser console for CORS or loading errors (404 errors often indicate incorrect URL paths)
+   - Verify the marketing app was deployed successfully and `remoteEntry.js` exists in the dist folder
 
 3. **Pages project issues**
    - Confirm project names match repository secrets
