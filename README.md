@@ -169,6 +169,15 @@ The container app is configured to load the marketing remote from a URL specifie
 
 The webpack configuration will automatically append `/remoteEntry.js` to the domain. The marketing app's `remoteEntry.js` file is built at the root of the dist folder, so it will be accessible at `{PRODUCTION_DOMAIN}/remoteEntry.js`.
 
+### Cloudflare Pages Configuration Files
+
+The marketing app includes `_redirects` and `_headers` files that are automatically copied to the dist folder during build:
+
+- **`_redirects`**: Ensures that static assets (like `remoteEntry.js`) are served directly, while non-file routes redirect to `index.html` for SPA routing
+- **`_headers`**: Sets proper MIME types for JavaScript files to ensure they're served with `application/javascript` content type
+
+These files are located in `packages/marketing/public/` and are automatically included in the build output. They help resolve issues where `remoteEntry.js` might be served as HTML instead of JavaScript.
+
 Example:
 - Marketing app deployed at: `https://marketing-mfe.pages.dev`
 - Set `PRODUCTION_DOMAIN=https://marketing-mfe.pages.dev`
@@ -197,12 +206,19 @@ Common deployment issues and solutions:
    - Verify `dist` or `build` directory exists after build
    - Ensure all dependencies are installed (`npm ci`)
 
-2. **Remote loading failures**
+2. **Remote loading failures (MIME type errors)**
    - Verify `PRODUCTION_DOMAIN` is set to the full base URL (e.g., `https://marketing-mfe.pages.dev`) without any paths
    - Ensure `PRODUCTION_DOMAIN` includes the protocol (`https://`)
    - Check that `remoteEntry.js` is accessible at `{PRODUCTION_DOMAIN}/remoteEntry.js`
-   - Check browser console for CORS or loading errors (404 errors often indicate incorrect URL paths)
+   - **Important**: Check Cloudflare Pages dashboard settings:
+     - Go to your marketing app's Pages project settings
+     - Look for "Builds & deployments" → "Compatibility flags" or "Functions" settings
+     - **Disable "Single Page Application" mode** if enabled (this can cause all requests to redirect to index.html)
+     - Alternatively, ensure the `_redirects` file is properly deployed (it should be in the root of your dist folder)
+   - Verify that `_redirects` and `_headers` files are included in the build output
+   - Check browser console for CORS or loading errors (404 errors or "text/html" MIME type errors indicate routing issues)
    - Verify the marketing app was deployed successfully and `remoteEntry.js` exists in the dist folder
+   - Test directly: Visit `{PRODUCTION_DOMAIN}/remoteEntry.js` in your browser - it should download/display JavaScript, not HTML
 
 3. **Pages project issues**
    - Confirm project names match repository secrets

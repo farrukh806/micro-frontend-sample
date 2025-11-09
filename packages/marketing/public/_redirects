@@ -1,0 +1,8 @@
+# Cloudflare Pages redirects file
+# This file ensures that static assets are served correctly
+# and only non-file routes redirect to index.html for SPA routing
+
+# Redirect all non-file routes to index.html (SPA routing)
+# Static files (like remoteEntry.js, *.js) will be served directly if they exist
+/* /index.html 200
+
